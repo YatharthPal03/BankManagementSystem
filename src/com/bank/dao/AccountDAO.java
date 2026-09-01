@@ -140,70 +140,46 @@ public class AccountDAO {
                         "(account_number, transaction_type, amount) " +
                         "VALUES (?, 'DEPOSIT', ?)";
 
-        Connection connection = null;
+        try (
+                Connection connection = DBConnection.getConnection();
+                PreparedStatement updateStatement =
+                        connection.prepareStatement(updateSQL);
+                PreparedStatement transactionStatement =
+                        connection.prepareStatement(transactionSQL)
+        ) {
 
-        try {
-
-            connection = DBConnection.getConnection();
-
+            // Start transaction
             connection.setAutoCommit(false);
 
-            PreparedStatement updateStatement =
-                    connection.prepareStatement(updateSQL);
-
+            // Update account balance
             updateStatement.setBigDecimal(1, amount);
             updateStatement.setString(2, accountNumber);
 
             int rows = updateStatement.executeUpdate();
 
+            // Account doesn't exist
             if (rows == 0) {
-
                 connection.rollback();
                 return false;
             }
 
-            PreparedStatement transactionStatement =
-                    connection.prepareStatement(transactionSQL);
-
+            // Record transaction
             transactionStatement.setString(1, accountNumber);
             transactionStatement.setBigDecimal(2, amount);
 
             transactionStatement.executeUpdate();
 
+            // Everything succeeded
             connection.commit();
 
             return true;
 
         } catch (SQLException e) {
 
-            try {
-
-                if (connection != null) {
-                    connection.rollback();
-                }
-
-            } catch (SQLException rollbackException) {
-
-                rollbackException.printStackTrace();
-            }
-
             e.printStackTrace();
 
-        } finally {
-
-            try {
-
-                if (connection != null) {
-                    connection.close();
-                }
-
-            } catch (SQLException e) {
-
-                e.printStackTrace();
-            }
+            return false;
         }
-
-        return false;
     }
 
 
@@ -219,71 +195,47 @@ public class AccountDAO {
                         "(account_number, transaction_type, amount) " +
                         "VALUES (?, 'WITHDRAW', ?)";
 
-        Connection connection = null;
+        try (
+                Connection connection = DBConnection.getConnection();
+                PreparedStatement updateStatement =
+                        connection.prepareStatement(updateSQL);
+                PreparedStatement transactionStatement =
+                        connection.prepareStatement(transactionSQL)
+        ) {
 
-        try {
-
-            connection = DBConnection.getConnection();
-
+            // Start transaction
             connection.setAutoCommit(false);
 
-            PreparedStatement updateStatement =
-                    connection.prepareStatement(updateSQL);
-
+            // Reduce account balance
             updateStatement.setBigDecimal(1, amount);
             updateStatement.setString(2, accountNumber);
             updateStatement.setBigDecimal(3, amount);
 
             int rows = updateStatement.executeUpdate();
 
+            // Account doesn't exist OR insufficient balance
             if (rows == 0) {
-
                 connection.rollback();
                 return false;
             }
 
-            PreparedStatement transactionStatement =
-                    connection.prepareStatement(transactionSQL);
-
+            // Record transaction
             transactionStatement.setString(1, accountNumber);
             transactionStatement.setBigDecimal(2, amount);
 
             transactionStatement.executeUpdate();
 
+            // Everything succeeded
             connection.commit();
 
             return true;
 
         } catch (SQLException e) {
 
-            try {
-
-                if (connection != null) {
-                    connection.rollback();
-                }
-
-            } catch (SQLException rollbackException) {
-
-                rollbackException.printStackTrace();
-            }
-
             e.printStackTrace();
 
-        } finally {
-
-            try {
-
-                if (connection != null) {
-                    connection.close();
-                }
-
-            } catch (SQLException e) {
-
-                e.printStackTrace();
-            }
+            return false;
         }
-
-        return false;
     }
 
 
@@ -311,18 +263,22 @@ public class AccountDAO {
                         "(account_number, transaction_type, amount) " +
                         "VALUES (?, 'TRANSFER_IN', ?)";
 
-        Connection connection = null;
+        try (
+                Connection connection = DBConnection.getConnection();
+                PreparedStatement withdrawStatement =
+                        connection.prepareStatement(withdrawSQL);
+                PreparedStatement depositStatement =
+                        connection.prepareStatement(depositSQL);
+                PreparedStatement transferOutStatement =
+                        connection.prepareStatement(transferOutSQL);
+                PreparedStatement transferInStatement =
+                        connection.prepareStatement(transferInSQL)
+        ) {
 
-        try {
-
-            connection = DBConnection.getConnection();
-
+            // Start transaction
             connection.setAutoCommit(false);
 
-            // Withdraw from sender
-            PreparedStatement withdrawStatement =
-                    connection.prepareStatement(withdrawSQL);
-
+            // 1. Withdraw money from sender
             withdrawStatement.setBigDecimal(1, amount);
             withdrawStatement.setString(2, fromAccount);
             withdrawStatement.setBigDecimal(3, amount);
@@ -330,80 +286,48 @@ public class AccountDAO {
             int withdrawRows =
                     withdrawStatement.executeUpdate();
 
+            // Sender doesn't exist OR insufficient balance
             if (withdrawRows == 0) {
-
                 connection.rollback();
                 return false;
             }
 
-            // Deposit into receiver
-            PreparedStatement depositStatement =
-                    connection.prepareStatement(depositSQL);
-
+            // 2. Add money to receiver
             depositStatement.setBigDecimal(1, amount);
             depositStatement.setString(2, toAccount);
 
             int depositRows =
                     depositStatement.executeUpdate();
 
+            // Receiver doesn't exist
             if (depositRows == 0) {
-
                 connection.rollback();
                 return false;
             }
 
-            // Record transfer OUT
-            PreparedStatement transferOutStatement =
-                    connection.prepareStatement(transferOutSQL);
-
+            // 3. Record sender transaction
             transferOutStatement.setString(1, fromAccount);
             transferOutStatement.setBigDecimal(2, amount);
 
             transferOutStatement.executeUpdate();
 
-            // Record transfer IN
-            PreparedStatement transferInStatement =
-                    connection.prepareStatement(transferInSQL);
-
+            // 4. Record receiver transaction
             transferInStatement.setString(1, toAccount);
             transferInStatement.setBigDecimal(2, amount);
 
             transferInStatement.executeUpdate();
 
+            // Everything succeeded
             connection.commit();
 
             return true;
 
         } catch (SQLException e) {
 
-            try {
-
-                if (connection != null) {
-                    connection.rollback();
-                }
-
-            } catch (SQLException rollbackException) {
-
-                rollbackException.printStackTrace();
-            }
-
             e.printStackTrace();
 
-        } finally {
-
-            try {
-
-                if (connection != null) {
-                    connection.close();
-                }
-
-            } catch (SQLException e) {
-
-                e.printStackTrace();
-            }
+            return false;
         }
-
-        return false;
     }
 
 
