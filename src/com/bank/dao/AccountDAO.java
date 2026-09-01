@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import com.bank.exception.BankException;
 
 public class AccountDAO {
 
@@ -123,6 +124,74 @@ public class AccountDAO {
 
         } catch (SQLException e) {
 
+            e.printStackTrace();
+        }
+    }
+
+    public void viewCustomerAccounts(int customerId) {
+
+        String sql =
+                "SELECT c.name, a.account_number, " +
+                        "a.account_type, a.balance " +
+                        "FROM customers c " +
+                        "JOIN accounts a " +
+                        "ON c.customer_id = a.customer_id " +
+                        "WHERE c.customer_id = ?";
+
+        try (
+                Connection connection = DBConnection.getConnection();
+                PreparedStatement preparedStatement =
+                        connection.prepareStatement(sql)
+        ) {
+
+            preparedStatement.setInt(1, customerId);
+
+            try (ResultSet resultSet =
+                         preparedStatement.executeQuery()) {
+
+                System.out.println(
+                        "\n========== CUSTOMER ACCOUNTS ==========\n"
+                );
+
+                boolean found = false;
+
+                while (resultSet.next()) {
+
+                    found = true;
+
+                    System.out.println(
+                            "Customer Name  : " +
+                                    resultSet.getString("name")
+                    );
+
+                    System.out.println(
+                            "Account Number : " +
+                                    resultSet.getString("account_number")
+                    );
+
+                    System.out.println(
+                            "Account Type   : " +
+                                    resultSet.getString("account_type")
+                    );
+
+                    System.out.println(
+                            "Balance        : ₹" +
+                                    resultSet.getBigDecimal("balance")
+                    );
+
+                    System.out.println(
+                            "---------------------------------------"
+                    );
+                }
+
+                if (!found) {
+                    System.out.println(
+                            "No accounts found for this customer."
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -331,45 +400,41 @@ public class AccountDAO {
     }
 
 
-    public BigDecimal getBalance(String accountNumber) {
+    public BigDecimal getBalance(String accountNumber) throws BankException {
 
         String sql =
                 "SELECT balance " +
                         "FROM accounts " +
                         "WHERE account_number = ?";
 
-        /*
-         * Connection, PreparedStatement and ResultSet
-         * are automatically closed.
-         */
-
         try (
                 Connection connection = DBConnection.getConnection();
-
                 PreparedStatement preparedStatement =
                         connection.prepareStatement(sql)
         ) {
-
             preparedStatement.setString(1, accountNumber);
 
-            try (
-                    ResultSet resultSet =
-                            preparedStatement.executeQuery()
-            ) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
 
                 if (resultSet.next()) {
-
                     return resultSet.getBigDecimal("balance");
                 }
+
+                throw new BankException("Account not found.");
+
+            } catch (SQLException e) {
+                throw new BankException(
+                        "Unable to retrieve account balance.",
+                        e
+                );
             }
 
         } catch (SQLException e) {
-
-            e.printStackTrace();
+            throw new BankException(
+                    "Unable to connect to the database.",
+                    e
+            );
         }
-
-        // null means the account was not found.
-        return null;
     }
 
     // Checks whether an account number is already in use

@@ -6,6 +6,7 @@ import com.bank.model.Customer;
 import com.bank.model.Account;
 import com.bank.dao.AccountDAO;
 import com.bank.util.InputValidator;
+import com.bank.exception.BankException;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
@@ -34,7 +35,8 @@ public class Main {
             System.out.println("9. Transfer Money");
             System.out.println("10. Check Balance");
             System.out.println("11. Transaction History");
-            System.out.println("12. Exit");
+            System.out.println("12. View Customer Accounts");
+            System.out.println("13. Exit");
             System.out.print("Enter your choice: ");
 
             int choice;
@@ -408,14 +410,10 @@ public class Main {
                         break;
                     }
 
-                    BigDecimal balance =
-                            accountDAO.getBalance(accountNumber);
+                    try {
 
-                    if (balance == null) {
-
-                        System.out.println("Account Not Found!");
-
-                    } else {
+                        BigDecimal balance =
+                                accountDAO.getBalance(accountNumber);
 
                         System.out.println(
                                 "\n========== ACCOUNT BALANCE =========="
@@ -432,6 +430,10 @@ public class Main {
                         System.out.println(
                                 "====================================="
                         );
+
+                    } catch (BankException e) {
+
+                        System.out.println("Error: " + e.getMessage());
                     }
 
                     break;
@@ -456,12 +458,38 @@ public class Main {
 
                 case 12: {
 
+                    System.out.print("Enter Customer ID: ");
+
+                    if (!scanner.hasNextInt()) {
+                        System.out.println(
+                                "Invalid Customer ID! Please enter a number."
+                        );
+                        scanner.nextLine();
+                        break;
+                    }
+
+                    int customerId = scanner.nextInt();
+                    scanner.nextLine();
+
+                    if (!customerDAO.customerExists(customerId)) {
+                        System.out.println("Customer Not Found!");
+                        break;
+                    }
+
+                    accountDAO.viewCustomerAccounts(customerId);
+
+                    break;
+                }
+
+                case 13: {
+
                     System.out.println("Thank You!");
                     scanner.close();
                     System.exit(0);
 
                     break;
                 }
+
 
                 default: {
 
