@@ -57,6 +57,12 @@ src/
 database/
 └── bankdb.sql
 
+screenshots/
+├── viewAccounts.png
+├── viewCustomerAccounts.png
+└── Transaction.png
+```
+
 ## Database Design
 
 The system uses three main tables:
@@ -107,16 +113,17 @@ DAO Classes
 JDBC
  ↓
 MySQL Database
-
+```
 
 The DAO classes are responsible for database operations, while model classes represent the application's data.
 
-Transaction Management
+## Transaction Management
 
 Financial operations such as deposits, withdrawals, and transfers use database transactions.
 
-For example, a transfer performs multiple database operation
+For example, a transfer performs multiple database operations:
 
+```text
 Withdraw from sender
         ↓
 Deposit into receiver
@@ -126,30 +133,39 @@ Record TRANSFER_OUT
 Record TRANSFER_IN
         ↓
 Commit
+```
 
 If an operation fails, the transaction is rolled back to prevent a partially completed transfer.
 
+## Database Setup
 
-Database Setup
-Install MySQL.
-Create the database using the provided SQL script:
+1. Install MySQL.
+2. Create the database using the provided SQL script:
+
+```text
 database/bankdb.sql
-Configure the database credentials in the application's environment variables.
-Run Main.java.
-Important
+```
+
+3. Configure the database credentials in the application's environment variables.
+4. Run `Main.java`.
+
+## Important
 
 The database password is not stored in the source code.
 
 The application reads the password from the environment variable:
 
+```text
 DB_PASSWORD
+```
 
 Set this variable before running the application.
 
-
-Example Operations
+## Example Operations
 
 The application provides a menu-driven interface:
+
+```text
 ========== BANK MANAGEMENT SYSTEM ==========
 
 1. Add Customer
@@ -165,7 +181,7 @@ The application provides a menu-driven interface:
 11. Transaction History
 12. View Customer Accounts
 13. Exit
-
+```
 
 ## Screenshots
 
@@ -181,19 +197,17 @@ The application provides a menu-driven interface:
 
 ![Transaction History](screenshots/Transaction.png)
 
-
-Future Improvements
+## Future Improvements
 
 Possible future improvements include:
 
-REST API using Spring Boot
-Authentication and authorization
-Web-based user interface
-JPA/Hibernate integration
-Automated testing
-Docker deployment
+- REST API using Spring Boot
+- Authentication and authorization
+- Web-based user interface
+- JPA/Hibernate integration
+- Automated testing
+- Docker deployment
 
+## Author
 
-
-Author
 Yatharth Pal
