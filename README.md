@@ -167,6 +167,21 @@ The application provides a menu-driven interface:
 13. Exit
 
 
+## Screenshots
+
+### Account List
+
+![View Accounts](screenshots/viewAccounts.png)
+
+### Customer Accounts
+
+![View Customer Accounts](screenshots/viewCustomerAccounts.png)
+
+### Transaction History
+
+![Transaction History](screenshots/Transaction.png)
+
+
 Future Improvements
 
 Possible future improvements include:
